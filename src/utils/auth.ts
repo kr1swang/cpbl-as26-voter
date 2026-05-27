@@ -2,6 +2,7 @@ import { existsSync } from 'node:fs'
 import { resolve } from 'node:path'
 
 import axios from 'axios'
+import { formatDuration, intervalToDuration, parseISO } from 'date-fns'
 import { chromium } from 'playwright'
 
 import type { VerifyResponse } from '../types.js'
@@ -53,6 +54,8 @@ async function silentRefresh(): Promise<boolean> {
     )
 
     saveToken(token, data.expires_in)
+    await context.storageState({ path: authPath })
+
     logInfo('Silent refresh succeeded')
     return true
   } catch (error) {
@@ -63,8 +66,15 @@ async function silentRefresh(): Promise<boolean> {
   }
 }
 
+function readAndLogToken(): string {
+  const state = readToken()
+  const duration = intervalToDuration({ start: new Date(), end: parseISO(state.expiresAt) })
+  logInfo(`Token remains ${formatDuration(duration, { format: ['hours', 'minutes'] })}`)
+  return state.token
+}
+
 export async function ensureValidToken(): Promise<string> {
-  if (!isTokenStale()) return readToken()
+  if (!isTokenStale()) return readAndLogToken()
 
   logInfo('Token is stale, attempting silent refresh...')
   const success = await silentRefresh()
@@ -74,5 +84,5 @@ export async function ensureValidToken(): Promise<string> {
     throw new Error('TOKEN_EXPIRED — please run: yarn login')
   }
 
-  return readToken()
+  return readAndLogToken()
 }

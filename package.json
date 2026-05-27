@@ -7,10 +7,7 @@
     "config": "tsx src/config.ts",
     "login": "tsx src/login.ts",
     "dev": "tsx src/scheduler.ts",
-    "build": "tsc",
-    "start": "yarn build && node dist/scheduler.js",
-    "test": "vitest run --exclude 'dist/**'",
-    "test:watch": "vitest --exclude 'dist/**'"
+    "start": "tsx src/scheduler.ts"
   },
   "dependencies": {
     "axios": "^1.16.1",
@@ -22,7 +19,6 @@
     "@types/node": "^25.9.1",
     "@types/prompts": "^2.4.9",
     "prettier": "^3.8.3",
-    "ts-node": "^10.9.2",
     "tsx": "^4.22.3",
     "typescript": "^6.0.3"
   }

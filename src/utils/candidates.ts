@@ -17,7 +17,7 @@ export function saveCandidates(candidates: string[]): void {
 export function readCandidates(): string[] {
   const raw = readFileSync(candidatesPath, 'utf-8')
   const candidates: string[] = JSON.parse(raw)
-  if (!Array.isArray(candidates) || candidates.length !== 16)
+  if (!Array.isArray(candidates) || candidates.length !== expectedPositions.length)
     throw new Error('session/candidates.json is invalid — run: yarn config')
   return candidates
 }
@@ -34,7 +34,8 @@ export async function getCandidates(): Promise<Candidate[]> {
 export async function validateCandidates(candidates: string[]): Promise<void> {
   logInfo('Validating candidates')
 
-  if (candidates.length !== 16) throw new Error('Candidates length must be 16')
+  if (candidates.length !== expectedPositions.length)
+    throw new Error(`Candidates length must be ${expectedPositions.length}`)
 
   const data = await getCandidates()
   const candidateMap = new Map(data.map((candidate) => [candidate.searchId, candidate]))
@@ -85,11 +86,20 @@ export async function validateCandidates(candidates: string[]): Promise<void> {
     }
   })
 
-  const getRanking = (row: Item): string => {
-    const list = data.filter((c) => c.position === row.position.code).sort((a, b) => b.votes - a.votes)
-    const index = list.findIndex((c) => c.searchId === row.searchId)
-    return `#${index + 1}`
+  const grouped = new Map<string, Candidate[]>()
+  for (const c of data) {
+    const group = grouped.get(c.position)
+    if (group) group.push(c)
+    else grouped.set(c.position, [c])
   }
+
+  const rankMap = new Map(
+    [...grouped.values()].flatMap((group) =>
+      group.sort((a, b) => b.votes - a.votes).map((c, i) => [c.searchId, i + 1] as const),
+    ),
+  )
+
+  const getRanking = (row: Item): string => `#${rankMap.get(row.searchId) ?? '?'}`
 
   console.table(
     list.map((row) => ({
