@@ -36,6 +36,10 @@ export type Item = {
   message: string | null
 }
 
+export type PositionGroup = Item['position'] & {
+  indices: number[]
+}
+
 export type TokenState = {
   token: string
   updatedAt: string

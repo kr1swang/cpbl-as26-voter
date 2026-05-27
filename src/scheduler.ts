@@ -49,4 +49,7 @@ async function start(): Promise<void> {
   await runVote()
 }
 
-start()
+start().catch((error) => {
+  logError(error instanceof Error ? error.message : String(error))
+  process.exit(1)
+})

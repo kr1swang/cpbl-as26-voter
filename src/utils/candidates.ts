@@ -95,7 +95,7 @@ export async function validateCandidates(candidates: string[]): Promise<void> {
     list.map((row) => ({
       ...row,
       isValid: row.isValid ? '✓' : '✗',
-      position: `${row.position.code} (${row.position.label})`,
+      position: `${row.position.label}(${row.position.code})`,
       no: isNaN(row.no) ? '-' : `#${row.no}`,
       ranking: getRanking(row),
       votes: (isNaN(row.votes) ? '-' : `${row.votes}`).padStart(8, ' '),

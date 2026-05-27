@@ -5,7 +5,7 @@ import axios from 'axios'
 import { chromium } from 'playwright'
 
 import type { VerifyResponse } from './types.js'
-import { logInfo } from './utils/logger.js'
+import { logError, logInfo } from './utils/logger.js'
 import { saveToken } from './utils/token.js'
 
 const authPath = resolve('session/auth.json')
@@ -45,4 +45,7 @@ export async function login(): Promise<void> {
   await browser.close()
 }
 
-login()
+login().catch((error) => {
+  logError(error instanceof Error ? error.message : String(error))
+  process.exit(1)
+})
