@@ -1,7 +1,6 @@
 import { addDays, differenceInMilliseconds, format, getHours, set } from 'date-fns'
 import { randomInt } from 'node:crypto'
 
-import { ensureValidToken } from './utils/auth.js'
 import { formatStr, targetHours } from './utils/constants.js'
 import { logError, logInfo } from './utils/logger.js'
 import { vote } from './vote.js'
@@ -35,9 +34,6 @@ async function runVote(): Promise<void> {
 }
 
 async function start(): Promise<void> {
-  logInfo('Ensuring valid token...')
-  await ensureValidToken()
-
   logInfo('Try to run vote immediately for the first time')
   try {
     await vote()
