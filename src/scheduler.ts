@@ -2,7 +2,8 @@ import { addDays, differenceInMilliseconds, format, getHours, set } from 'date-f
 
 import { randomInt } from 'node:crypto'
 
-import { formatStr, logger, targetHours } from './utils.js'
+import { formatStr, targetHours } from './utils/constants.js'
+import { logInfo } from './utils/logger.js'
 import { vote } from './vote.js'
 
 function getNextSchedule(): Date {
@@ -19,7 +20,7 @@ function getNextSchedule(): Date {
 
 async function runVote(): Promise<void> {
   const target = getNextSchedule()
-  logger(`Next vote is scheduled at ${format(target, formatStr)}`)
+  logInfo(`Next vote is scheduled at ${format(target, formatStr)}`)
 
   const delay = differenceInMilliseconds(target, new Date())
   await new Promise((resolve) => setTimeout(resolve, delay))
@@ -29,10 +30,10 @@ async function runVote(): Promise<void> {
 }
 
 async function start(): Promise<void> {
-  logger('Try to run vote immediately for the first time')
+  logInfo('Try to run vote immediately for the first time')
   await vote()
 
-  logger('Scheduler is starting...')
+  logInfo('Scheduler is starting...')
   runVote()
 }
 

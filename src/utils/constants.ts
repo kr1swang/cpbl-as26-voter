@@ -1,11 +1,6 @@
-import { format } from 'date-fns'
-import type { Item } from './types.js'
+import type { Item } from '../types.js'
 
-export const formatStr = 'yyyy/MM/dd HH:mm:ss'
-
-export function logger(message: string): void {
-  console.info(`[${format(new Date(), formatStr)}] ${message}`)
-}
+export const formatStr: string = 'yyyy/MM/dd HH:mm:ss'
 
 export const targetHours: number[] = [1, 7, 13, 19]
 

@@ -1,13 +1,12 @@
 import axios from 'axios'
 import { formatDuration, intervalToDuration } from 'date-fns'
-import dotenv from 'dotenv'
 import type { CandidatesResponse, Item, SubmitResponse, VerifyResponse } from './types.js'
-import { candidates, expectedPositions, logger } from './utils.js'
-
-dotenv.config()
+import { candidates, expectedPositions } from './utils/constants.js'
+import { logError, logInfo } from './utils/logger.js'
+import { readToken } from './utils/token.js'
 
 async function verifyAccessToken(accessToken: string): Promise<void> {
-  logger('Verifying access token')
+  logInfo('Verifying access token')
 
   const { data } = await axios.get<VerifyResponse>(
     `https://api.line.me/oauth2/v2.1/verify?access_token=${encodeURIComponent(accessToken)}`,
@@ -15,11 +14,11 @@ async function verifyAccessToken(accessToken: string): Promise<void> {
   )
 
   const duration = intervalToDuration({ start: 0, end: data.expires_in * 1000 })
-  logger(`Token remains ${formatDuration(duration, { format: ['hours', 'minutes'] })}`)
+  logInfo(`Token remains ${formatDuration(duration, { format: ['hours', 'minutes'] })}`)
 }
 
 async function validateCandidates(accessToken: string, candidates: string[]): Promise<void> {
-  logger('Validating candidates')
+  logInfo('Validating candidates')
 
   if (candidates.length !== 16) throw new Error('candidates length must be 16')
 
@@ -93,10 +92,9 @@ async function validateCandidates(accessToken: string, candidates: string[]): Pr
 
 export async function vote(): Promise<void> {
   try {
-    logger('Vote is running')
+    logInfo('Vote is running')
 
-    const accessToken = process.env.ACCESS_TOKEN
-    if (!accessToken) throw new Error('access token environment variable is not set')
+    const accessToken = readToken()
 
     await verifyAccessToken(accessToken)
     await validateCandidates(accessToken, candidates)
@@ -117,8 +115,12 @@ export async function vote(): Promise<void> {
     )
     if (data.code !== 200) throw new Error(data.message || 'Unknown error')
 
-    logger(`Vote completed, ${data.message}`)
+    logInfo(`Vote completed, ${data.message}`)
   } catch (error) {
-    logger(`Vote failed, ${error instanceof Error ? error.message : String(error)}`)
+    if (axios.isAxiosError(error) && (error.response?.status === 401 || error.response?.status === 403)) {
+      logError('TOKEN_EXPIRED — please run: yarn login')
+    } else {
+      logError(`Vote failed, ${error instanceof Error ? error.message : String(error)}`)
+    }
   }
 }
