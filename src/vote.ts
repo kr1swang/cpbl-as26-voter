@@ -20,7 +20,7 @@ async function verifyAccessToken(accessToken: string): Promise<void> {
 async function validateCandidates(accessToken: string, candidates: string[]): Promise<void> {
   logInfo('Validating candidates')
 
-  if (candidates.length !== 16) throw new Error('candidates length must be 16')
+  if (candidates.length !== 16) throw new Error('Candidates length must be 16')
 
   const { data } = await axios.get<CandidatesResponse>('https://cpbl-server.line-apps.com/api/candidates', {
     headers: {
@@ -31,7 +31,7 @@ async function validateCandidates(accessToken: string, candidates: string[]): Pr
       'x-line-accesstoken': accessToken,
     },
   })
-  if (data.code !== 200) throw new Error(data.message || 'unknown error')
+  if (data.code !== 200) throw new Error(data.message || 'Unknown error')
 
   const candidateMap = new Map(data.result.map((c) => [c.searchId, c]))
 
@@ -87,7 +87,7 @@ async function validateCandidates(accessToken: string, candidates: string[]): Pr
   )
 
   const rows = list.filter((row) => !row.isValid)
-  if (rows.length > 0) throw new Error(`there are ${rows.length} invalid candidates`)
+  if (rows.length > 0) throw new Error(`There are ${rows.length} invalid candidates`)
 }
 
 export async function vote(): Promise<void> {
