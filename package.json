@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "config": "tsx src/config.ts",
-    "login": "tsx src/auth/interactive-login.ts",
+    "login": "tsx src/login.ts",
     "dev": "tsx src/scheduler.ts",
     "build": "tsc",
     "start": "yarn build && node dist/scheduler.js",
@@ -24,7 +24,6 @@
     "prettier": "^3.8.3",
     "ts-node": "^10.9.2",
     "tsx": "^4.22.3",
-    "typescript": "^6.0.3",
-    "vitest": "^4.1.7"
+    "typescript": "^6.0.3"
   }
 }

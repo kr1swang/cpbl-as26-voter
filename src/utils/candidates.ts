@@ -1,26 +1,34 @@
-import { readFileSync } from 'node:fs'
-import { resolve } from 'node:path'
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { dirname, resolve } from 'node:path'
 
 import axios from 'axios'
 
-import type { CandidatesResponse, Item } from '../types.js'
+import type { Candidate, CandidatesResponse, Item } from '../types.js'
 import { expectedPositions } from './constants.js'
 import { logInfo } from './logger.js'
 
-type CandidatesConfig = {
-  candidates: string[]
-  updatedAt: string
-}
-
 export const candidatesPath = resolve('session/candidates.json')
 
-export function loadCandidates(): string[] {
+export function saveCandidates(candidates: string[]): void {
+  mkdirSync(dirname(candidatesPath), { recursive: true })
+  writeFileSync(candidatesPath, JSON.stringify(candidates, null, 2))
+}
+
+export function readCandidates(): string[] {
   const raw = readFileSync(candidatesPath, 'utf-8')
-  const config: CandidatesConfig = JSON.parse(raw)
-  if (!Array.isArray(config.candidates) || config.candidates.length !== 16) {
+  const candidates: string[] = JSON.parse(raw)
+  if (!Array.isArray(candidates) || candidates.length !== 16)
     throw new Error('session/candidates.json is invalid — run: yarn config')
-  }
-  return config.candidates
+  return candidates
+}
+
+export async function getCandidates(): Promise<Candidate[]> {
+  const { data } = await axios.get<CandidatesResponse>('https://cpbl-server.line-apps.com/api/candidates', {
+    headers: { accept: 'application/json' },
+  })
+  if (data.code !== 200) throw new Error(data.message || 'Failed to fetch candidates')
+
+  return data.result
 }
 
 export async function validateCandidates(candidates: string[]): Promise<void> {
@@ -28,12 +36,8 @@ export async function validateCandidates(candidates: string[]): Promise<void> {
 
   if (candidates.length !== 16) throw new Error('Candidates length must be 16')
 
-  const { data } = await axios.get<CandidatesResponse>('https://cpbl-server.line-apps.com/api/candidates', {
-    headers: { accept: 'application/json' },
-  })
-  if (data.code !== 200) throw new Error(data.message || 'Unknown error')
-
-  const candidateMap = new Map(data.result.map((c) => [c.searchId, c]))
+  const data = await getCandidates()
+  const candidateMap = new Map(data.map((candidate) => [candidate.searchId, candidate]))
 
   const list: Item[] = candidates.map((searchId, index) => {
     const expected = expectedPositions[index]
@@ -82,7 +86,7 @@ export async function validateCandidates(candidates: string[]): Promise<void> {
   })
 
   const getRanking = (row: Item): string => {
-    const list = data.result.filter((c) => c.position === row.position.code).sort((a, b) => b.votes - a.votes)
+    const list = data.filter((c) => c.position === row.position.code).sort((a, b) => b.votes - a.votes)
     const index = list.findIndex((c) => c.searchId === row.searchId)
     return `#${index + 1}`
   }

@@ -5,14 +5,14 @@ import axios from 'axios'
 import { chromium } from 'playwright'
 
 import type { VerifyResponse } from '../types.js'
-import { logError, logInfo } from '../utils/logger.js'
-import { saveToken } from '../utils/token.js'
+import { logError, logInfo } from './logger.js'
+import { isTokenStale, readToken, saveToken } from './token.js'
 
 const authPath = resolve('session/auth.json')
 const targetUrl = 'https://linetoday-cpbl.landpress.line.me/'
 const REFRESH_TIMEOUT_MS = 30_000
 
-export async function silentRefresh(): Promise<boolean> {
+async function silentRefresh(): Promise<boolean> {
   if (!existsSync(authPath)) {
     logError('auth.json not found, cannot silent refresh')
     return false
@@ -61,4 +61,18 @@ export async function silentRefresh(): Promise<boolean> {
   } finally {
     await browser.close()
   }
+}
+
+export async function ensureValidToken(): Promise<string> {
+  if (!isTokenStale()) return readToken()
+
+  logInfo('Token is stale, attempting silent refresh...')
+  const success = await silentRefresh()
+
+  if (!success) {
+    logError('TOKEN_EXPIRED — please run: yarn login')
+    throw new Error('TOKEN_EXPIRED — please run: yarn login')
+  }
+
+  return readToken()
 }

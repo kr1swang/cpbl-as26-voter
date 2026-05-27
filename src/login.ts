@@ -1,18 +1,16 @@
 import { existsSync } from 'node:fs'
 import { resolve } from 'node:path'
-import { fileURLToPath } from 'node:url'
 
 import axios from 'axios'
 import { chromium } from 'playwright'
 
-import type { VerifyResponse } from '../types.js'
-import { logError, logInfo } from '../utils/logger.js'
-import { saveToken } from '../utils/token.js'
+import type { VerifyResponse } from './types.js'
+import { logInfo } from './utils/logger.js'
+import { saveToken } from './utils/token.js'
 
 const authPath = resolve('session/auth.json')
-const targetUrl = 'https://linetoday-cpbl.landpress.line.me/'
 
-export async function interactiveLogin(): Promise<void> {
+export async function login(): Promise<void> {
   logInfo('Opening browser...')
 
   const browser = await chromium.launch({ headless: false })
@@ -28,7 +26,7 @@ export async function interactiveLogin(): Promise<void> {
     })
   })
 
-  await page.goto(targetUrl)
+  await page.goto('https://linetoday-cpbl.landpress.line.me/')
   logInfo('Waiting for token... (log in to LINE if prompted)')
 
   const token = await tokenPromise
@@ -47,9 +45,4 @@ export async function interactiveLogin(): Promise<void> {
   await browser.close()
 }
 
-if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  interactiveLogin().catch((error) => {
-    logError(error instanceof Error ? error.message : String(error))
-    process.exit(1)
-  })
-}
+login()

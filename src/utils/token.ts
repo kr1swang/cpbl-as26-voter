@@ -1,8 +1,9 @@
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 
-import { addMinutes, addSeconds, isBefore, isValid, parseISO } from 'date-fns'
+import { addMinutes, addSeconds, formatDuration, intervalToDuration, isBefore, isValid, parseISO } from 'date-fns'
 import type { TokenState } from '../types.js'
+import { logInfo } from './logger.js'
 
 const tokenPath = resolve('session/token.json')
 
@@ -21,8 +22,10 @@ export function saveToken(token: string, expiresIn: number): void {
 
 export function readToken(): string {
   const raw = readFileSync(tokenPath, 'utf-8')
-  const state: TokenState = JSON.parse(raw)
-  return state.token
+  const { token, expiresAt }: TokenState = JSON.parse(raw)
+  const duration = intervalToDuration({ start: new Date(), end: parseISO(expiresAt) })
+  logInfo(`Token remains ${formatDuration(duration, { format: ['hours', 'minutes'] })}`)
+  return token
 }
 
 export function isTokenStale(): boolean {

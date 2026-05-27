@@ -36,13 +36,6 @@ export type Item = {
   message: string | null
 }
 
-export class AuthError extends Error {
-  constructor(message = 'Authentication required') {
-    super(message)
-    this.name = 'AuthError'
-  }
-}
-
 export type TokenState = {
   token: string
   updatedAt: string

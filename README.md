@@ -1,4 +1,4 @@
-# vote-cpbl-as-2026
+# cpbl-as26-voter
 
 An automated voting bot for the 2026 CPBL All-Star Game fan vote.
 
@@ -25,7 +25,7 @@ yarn install
 npx playwright install chromium
 ```
 
-### First-time login (obtain token)
+### 1. Login (obtain token)
 
 ```bash
 yarn login
@@ -34,7 +34,15 @@ yarn login
 A browser window will open. If the session has expired, log in to LINE manually.  
 Once the page loads, the token is intercepted and saved to `session/` automatically, then the browser closes.
 
-### Start the scheduler
+### 2. Configure candidates
+
+```bash
+yarn config
+```
+
+Fetches the latest candidates from the CPBL API and prompts you to interactively select one player per position. Selections are saved to `session/candidates.json`.
+
+### 3. Start the scheduler
 
 ```bash
 # Development (runs with tsx directly)
@@ -47,36 +55,6 @@ yarn start
 ### Handling token expiration
 
 If you see `TOKEN_EXPIRED` in the logs, simply run `yarn login` again.
-
----
-
-## Customizing Candidates
-
-Edit `src/utils/constants.ts` to change who you vote for.
-
-Each entry in `candidates` is a player's `searchId` and must correspond to the position defined at the same index in `expectedPositions`:
-
-| Index | Position   | Code |
-| ----- | ---------- | ---- |
-| 0     | 先發投手   | P1   |
-| 1     | 中繼投手   | P2   |
-| 2     | 救援投手   | P3   |
-| 3     | 捕手       | C    |
-| 4     | 一壘手     | 1B   |
-| 5     | 二壘手     | 2B   |
-| 6     | 三壘手     | 3B   |
-| 7     | 游擊手     | SS   |
-| 8–10  | 外野手     | CF   |
-| 11    | 指定打擊   | DH   |
-| 12–15 | 全壘打大賽 | HR   |
-
-To find a player's `searchId`, call the candidates API:
-
-```
-GET https://cpbl-server.line-apps.com/api/candidates
-```
-
-Each player in the response has a `searchId` field (e.g. `"cpbl_48"`).
 
 ---
 

@@ -1,19 +1,17 @@
 import axios from 'axios'
-import { ensureValidToken } from './auth/auth-manager.js'
-import { verifyAccessToken } from './auth/verify.js'
+
 import type { SubmitResponse } from './types.js'
-import { AuthError } from './types.js'
-import { loadCandidates, validateCandidates } from './utils/candidates.js'
+import { ensureValidToken } from './utils/auth.js'
+import { readCandidates, validateCandidates } from './utils/candidates.js'
 import { logInfo } from './utils/logger.js'
 
 export async function vote(): Promise<void> {
   logInfo('Vote is running')
 
-  const candidates = loadCandidates()
+  const candidates = readCandidates()
   await validateCandidates(candidates)
 
   const accessToken = await ensureValidToken()
-  await verifyAccessToken(accessToken)
 
   try {
     const { data } = await axios.post<SubmitResponse>(
@@ -30,13 +28,14 @@ export async function vote(): Promise<void> {
         },
       },
     )
-    if (data.code !== 200) throw new Error(data.message || 'Unknown error')
+    if (data.code !== 200) throw new Error(data.message || 'Failed to submit vote')
 
     logInfo(`Vote completed, ${data.message}`)
   } catch (error) {
-    if (axios.isAxiosError(error) && (error.response?.status === 401 || error.response?.status === 403)) {
-      throw new AuthError('Token rejected by API')
+    if (axios.isAxiosError(error) && [401, 403].includes(error.response?.status ?? 0)) {
+      throw new Error('Token rejected by API')
+    } else {
+      throw error
     }
-    throw error
   }
 }
