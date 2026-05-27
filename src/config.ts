@@ -42,6 +42,7 @@ async function promptSelections(
         })),
         min: count,
         max: count,
+        instructions: false,
       },
       {
         onCancel: () => {
