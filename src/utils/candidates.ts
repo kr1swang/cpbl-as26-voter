@@ -1,0 +1,105 @@
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
+
+import axios from 'axios'
+
+import type { CandidatesResponse, Item } from '../types.js'
+import { expectedPositions } from './constants.js'
+import { logInfo } from './logger.js'
+
+type CandidatesConfig = {
+  candidates: string[]
+  updatedAt: string
+}
+
+export const candidatesPath = resolve('session/candidates.json')
+
+export function loadCandidates(): string[] {
+  const raw = readFileSync(candidatesPath, 'utf-8')
+  const config: CandidatesConfig = JSON.parse(raw)
+  if (!Array.isArray(config.candidates) || config.candidates.length !== 16) {
+    throw new Error('session/candidates.json is invalid — run: yarn config')
+  }
+  return config.candidates
+}
+
+export async function validateCandidates(candidates: string[]): Promise<void> {
+  logInfo('Validating candidates')
+
+  if (candidates.length !== 16) throw new Error('Candidates length must be 16')
+
+  const { data } = await axios.get<CandidatesResponse>('https://cpbl-server.line-apps.com/api/candidates', {
+    headers: { accept: 'application/json' },
+  })
+  if (data.code !== 200) throw new Error(data.message || 'Unknown error')
+
+  const candidateMap = new Map(data.result.map((c) => [c.searchId, c]))
+
+  const list: Item[] = candidates.map((searchId, index) => {
+    const expected = expectedPositions[index]
+    const info = candidateMap.get(searchId)
+
+    if (!info) {
+      return {
+        searchId,
+        isValid: false,
+        position: expected,
+        name: '-',
+        team: '-',
+        no: NaN,
+        votes: NaN,
+        message: 'not found',
+      }
+    }
+
+    const isDuplicate = candidates.indexOf(searchId) !== index
+    if (isDuplicate) {
+      return {
+        searchId,
+        isValid: false,
+        position: expected,
+        name: info.name,
+        team: info.team.toUpperCase(),
+        no: info.no,
+        votes: info.votes,
+        message: 'duplicate',
+      }
+    }
+
+    const { name, team, no, position, votes } = info
+    const isMatch = position === expected.code
+
+    return {
+      searchId,
+      isValid: isMatch,
+      position: expected,
+      name,
+      team: team.toUpperCase(),
+      no,
+      votes,
+      message: isMatch ? null : `actual: ${position}`,
+    }
+  })
+
+  const getRanking = (row: Item): string => {
+    const list = data.result.filter((c) => c.position === row.position.code).sort((a, b) => b.votes - a.votes)
+    const index = list.findIndex((c) => c.searchId === row.searchId)
+    return `#${index + 1}`
+  }
+
+  console.table(
+    list.map((row) => ({
+      ...row,
+      isValid: row.isValid ? '✓' : '✗',
+      position: `${row.position.code} (${row.position.label})`,
+      no: isNaN(row.no) ? '-' : `#${row.no}`,
+      ranking: getRanking(row),
+      votes: (isNaN(row.votes) ? '-' : `${row.votes}`).padStart(8, ' '),
+      message: row.message ?? '-',
+    })),
+    ['isValid', 'position', 'name', 'team', 'no', 'ranking', 'votes', 'message'],
+  )
+
+  const rows = list.filter((row) => !row.isValid)
+  if (rows.length > 0) throw new Error(`There are ${rows.length} invalid candidates`)
+}

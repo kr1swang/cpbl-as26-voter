@@ -1,15 +1,18 @@
 import { existsSync } from 'node:fs'
 import { resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
 
+import axios from 'axios'
 import { chromium } from 'playwright'
 
-import { logInfo } from './utils/logger.js'
-import { saveToken } from './utils/token.js'
+import type { VerifyResponse } from '../types.js'
+import { logError, logInfo } from '../utils/logger.js'
+import { saveToken } from '../utils/token.js'
 
 const authPath = resolve('session/auth.json')
 const targetUrl = 'https://linetoday-cpbl.landpress.line.me/'
 
-async function login(): Promise<void> {
+export async function interactiveLogin(): Promise<void> {
   logInfo('Opening browser...')
 
   const browser = await chromium.launch({ headless: false })
@@ -31,7 +34,12 @@ async function login(): Promise<void> {
   const token = await tokenPromise
   logInfo('Token captured!')
 
-  saveToken(token)
+  const { data } = await axios.get<VerifyResponse>(
+    `https://api.line.me/oauth2/v2.1/verify?access_token=${encodeURIComponent(token)}`,
+    { headers: { accept: 'application/json' } },
+  )
+
+  saveToken(token, data.expires_in)
   await context.storageState({ path: authPath })
 
   logInfo('Saved session/token.json and session/auth.json')
@@ -39,7 +47,9 @@ async function login(): Promise<void> {
   await browser.close()
 }
 
-login().catch((error) => {
-  console.error(error)
-  process.exit(1)
-})
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  interactiveLogin().catch((error) => {
+    logError(error instanceof Error ? error.message : String(error))
+    process.exit(1)
+  })
+}

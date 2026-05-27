@@ -4,25 +4,6 @@ export const formatStr: string = 'yyyy/MM/dd HH:mm:ss'
 
 export const targetHours: number[] = [1, 7, 13, 19]
 
-export const candidates: string[] = [
-  'cpbl_48',
-  'cpbl_102',
-  'cpbl_134',
-  'cpbl_153',
-  'cpbl_171',
-  'cpbl_186',
-  'cpbl_205',
-  'cpbl_217',
-  'cpbl_253',
-  'cpbl_248',
-  'cpbl_247',
-  'cpbl_273',
-  'cpbl_1',
-  'cpbl_5',
-  'cpbl_6',
-  'cpbl_15',
-]
-
 export const expectedPositions: Item['position'][] = [
   { code: 'P1', label: '先發投手' },
   { code: 'P2', label: '中繼投手' },
