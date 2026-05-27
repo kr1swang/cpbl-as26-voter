@@ -17,19 +17,13 @@ async function verifyAccessToken(accessToken: string): Promise<void> {
   logInfo(`Token remains ${formatDuration(duration, { format: ['hours', 'minutes'] })}`)
 }
 
-async function validateCandidates(accessToken: string, candidates: string[]): Promise<void> {
+async function validateCandidates(candidates: string[]): Promise<void> {
   logInfo('Validating candidates')
 
   if (candidates.length !== 16) throw new Error('Candidates length must be 16')
 
   const { data } = await axios.get<CandidatesResponse>('https://cpbl-server.line-apps.com/api/candidates', {
-    headers: {
-      accept: 'application/json, text/plain, */*',
-      origin: 'https://linetoday-cpbl.landpress.line.me',
-      referer: 'https://linetoday-cpbl.landpress.line.me/',
-      'x-liff-client': 'false',
-      'x-line-accesstoken': accessToken,
-    },
+    headers: { accept: 'application/json' },
   })
   if (data.code !== 200) throw new Error(data.message || 'Unknown error')
 
@@ -94,10 +88,10 @@ export async function vote(): Promise<void> {
   try {
     logInfo('Vote is running')
 
-    const accessToken = readToken()
+    await validateCandidates(candidates)
 
+    const accessToken = readToken()
     await verifyAccessToken(accessToken)
-    await validateCandidates(accessToken, candidates)
 
     const { data } = await axios.post<SubmitResponse>(
       'https://cpbl-server.line-apps.com/api/candidates/submit/pc',
