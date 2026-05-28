@@ -45,55 +45,55 @@ export async function refreshToken(): Promise<string> {
   logInfo('Attempting refresh token...')
 
   const browser = await chromium.launch({ headless: false })
-  const context = await browser.newContext(existsSync(authPath) ? { storageState: authPath } : {})
-  const page = await context.newPage()
+  try {
+    const context = await browser.newContext(existsSync(authPath) ? { storageState: authPath } : {})
+    const page = await context.newPage()
 
-  let interceptedToken: string | null = null
-  const tokenPromise = new Promise<string>((resolve) => {
-    page.on('request', (request) => {
-      if (request.url().includes('api/candidates') && !request.url().includes('submit')) {
-        const token = request.headers()['x-line-accesstoken']
-        if (token) {
-          interceptedToken = token
-          resolve(token)
+    let interceptedToken: string | null = null
+    const tokenPromise = new Promise<string>((resolve) => {
+      page.on('request', (request) => {
+        if (request.url().includes('api/candidates') && !request.url().includes('submit')) {
+          const token = request.headers()['x-line-accesstoken']
+          if (token) {
+            interceptedToken = token
+            resolve(token)
+          }
         }
-      }
+      })
     })
-  })
 
-  await page.goto('https://linetoday-cpbl.landpress.line.me/')
-  logInfo('Waiting for token... (log in to LINE if prompted)')
+    await page.goto('https://linetoday-cpbl.landpress.line.me/')
+    logInfo('Waiting for token... (log in to LINE if prompted)')
 
-  if (!interceptedToken) {
-    await page.locator('span.btn.vote').first().click({ timeout: 0 })
-    logInfo('Clicked vote button')
+    if (!interceptedToken) {
+      await page.locator('span.btn.vote').first().click({ timeout: 0 })
+      logInfo('Clicked vote button')
 
-    await page.locator('div.login-button').first().click({ timeout: 0 })
-    logInfo('Clicked login button')
-  } else {
-    logInfo('Token already intercepted; skipping interaction')
+      await page.locator('div.login-button').first().click({ timeout: 0 })
+      logInfo('Clicked login button')
+    } else {
+      logInfo('Token already intercepted; skipping interaction')
+    }
+
+    const token = await tokenPromise
+    logInfo('Token captured!')
+
+    const { data } = await axios.get<VerifyResponse>(
+      `https://api.line.me/oauth2/v2.1/verify?access_token=${encodeURIComponent(token)}`,
+      { headers: { accept: 'application/json' } },
+    )
+
+    const duration = intervalToDuration({ start: 0, end: data.expires_in * 1000 })
+    logInfo(`Token remains ${formatDuration(duration, { format: ['hours', 'minutes'] })}`)
+
+    saveToken(token, data.expires_in)
+    await context.storageState({ path: authPath })
+
+    logInfo('refresh token succeeded')
+    return token
+  } finally {
+    await browser.close()
   }
-
-  const token = await tokenPromise
-  logInfo('Token captured!')
-
-  if (!token) throw new Error('Token not found in request headers')
-
-  const { data } = await axios.get<VerifyResponse>(
-    `https://api.line.me/oauth2/v2.1/verify?access_token=${encodeURIComponent(token)}`,
-    { headers: { accept: 'application/json' } },
-  )
-
-  const duration = intervalToDuration({ start: 0, end: data.expires_in * 1000 })
-  logInfo(`Token remains ${formatDuration(duration, { format: ['hours', 'minutes'] })}`)
-
-  saveToken(token, data.expires_in)
-  await context.storageState({ path: authPath })
-
-  logInfo('refresh token succeeded')
-  await browser.close()
-
-  return token
 }
 
 export async function getToken(): Promise<string> {

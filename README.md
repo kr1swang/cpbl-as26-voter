@@ -44,11 +44,11 @@ yarn start
 
 `start` is the only runtime entrypoint.
 
-When token/auth state is stale, the app first attempts silent refresh. If that fails, it automatically opens an interactive browser flow to complete authentication and then continues.
+When token/auth state is stale, the app opens an interactive browser flow to refresh token. The script may wait on page interactions, and you can take over manually in the opened browser.
 
 ### Handling token expiration
 
-If `TOKEN_EXPIRED` appears in the logs, automatic refresh and interactive authentication both failed. Re-run `yarn start` and complete LINE login when the browser opens.
+Wait for the next scheduled vote and complete LINE login in the opened browser window.
 
 ---
 
