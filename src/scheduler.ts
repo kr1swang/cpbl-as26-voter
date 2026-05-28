@@ -25,7 +25,11 @@ async function runVote(): Promise<void> {
     const delay = differenceInMilliseconds(target, new Date())
     await new Promise<void>((resolve) => setTimeout(resolve, delay))
 
-    await vote()
+    try {
+      await vote()
+    } catch (error) {
+      logError(`Vote failed: ${error instanceof Error ? error.message : String(error)}`)
+    }
   }
 }
 
@@ -33,10 +37,10 @@ export async function startCommand(): Promise<void> {
   try {
     logInfo('Try to run vote immediately for the startup')
     await vote()
-
-    logInfo('Scheduler is starting...')
-    await runVote()
   } catch (error) {
     logError(`Vote failed: ${error instanceof Error ? error.message : String(error)}`)
   }
+
+  logInfo('Scheduler is starting...')
+  await runVote()
 }
