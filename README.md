@@ -17,6 +17,12 @@ Votes immediately on startup, then schedules recurring votes at 01, 07, 13, and 
 
 ---
 
+## Preview
+
+![screenshot](assets/screenshot.png)
+
+---
+
 ## Getting Started
 
 ### Install dependencies
