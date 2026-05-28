@@ -10,23 +10,6 @@ import { logInfo } from './logger.js'
 const tokenPath = resolve('session/token.json')
 const authPath = resolve('session/auth.json')
 
-async function clickIfVisible(
-  page: import('playwright').Page,
-  selector: string,
-  message: string,
-  timeout = 3000,
-): Promise<boolean> {
-  try {
-    const locator = page.locator(selector).first()
-    await locator.waitFor({ state: 'visible', timeout })
-    await locator.click({ timeout })
-    logInfo(message)
-    return true
-  } catch {
-    return false
-  }
-}
-
 export function saveToken(token: string): void {
   mkdirSync(dirname(tokenPath), { recursive: true })
 
@@ -89,29 +72,31 @@ export async function refreshToken(): Promise<string> {
     logInfo('Waiting for token... (log in to LINE if prompted)')
 
     if (!interceptedToken) {
-      await clickIfVisible(page, 'span.btn.vote', 'Clicked vote button', 5000)
-      await clickIfVisible(page, 'div.login-button', 'Clicked login button', 5000)
-
-      while (!interceptedToken) {
-        const clickedVote = await clickIfVisible(page, 'span.btn.vote', 'Clicked vote button after login', 1000)
-        if (clickedVote) {
-          await Promise.race([tokenPromise.then(() => undefined), page.waitForTimeout(1500)])
-          continue
+      const buttonSelectors = [
+        { name: 'Vote button', selector: 'span.btn.vote' },
+        { name: 'Login button', selector: 'div.login-button' },
+      ]
+      for (const { name, selector } of buttonSelectors) {
+        try {
+          const locator = page.locator(selector).first()
+          await locator.waitFor({ state: 'visible', timeout: 3000 })
+          await locator.click({ timeout: 3000 })
+          logInfo(`Clicked ${name}`)
+        } catch {
+          logInfo(`${name} not found`)
         }
-
-        await page.waitForTimeout(1000)
       }
     } else {
       logInfo('Token already intercepted; skipping interaction')
     }
 
     const token = await tokenPromise
-    logInfo('Token captured!')
+    logInfo('Token captured successfully')
 
     saveToken(token)
     await context.storageState({ path: authPath })
 
-    logInfo('refresh token succeeded')
+    logInfo('Refresh token success')
     return token
   } finally {
     await browser.close()
