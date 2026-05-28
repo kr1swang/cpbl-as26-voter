@@ -2,7 +2,7 @@
 
 An automated voting bot for the 2026 CPBL All-Star Game fan vote.
 
-Votes once per day at 01, 07, 13, and 19 o'clock with randomized minutes and seconds.
+Votes immediately on startup, then schedules recurring votes at 01, 07, 13, and 19 o'clock with randomized minutes and seconds each day.
 
 ---
 
@@ -13,7 +13,7 @@ Votes once per day at 01, 07, 13, and 19 o'clock with randomized minutes and sec
 - **date-fns** — schedule time calculation
 - **session/auth.json** — persists browser session (cookies / localStorage)
 - **session/token.json** — stores the runtime access token
-- **session/candidates.json** - stores the selected candidates for each position
+- **session/candidates.json** — stores the selected candidates for each position
 
 ---
 
@@ -26,29 +26,39 @@ yarn install
 npx playwright install chromium
 ```
 
-### 1. Configure candidates
-
-```bash
-yarn config
-```
-
-Fetches the latest candidates from the CPBL API and prompts you to interactively select one player per position. Selections are saved to `session/candidates.json`.
-
-Default settings are the developer's selections for each position. You can modify the candidates at any time by running the command again.
-
-### 2. Start the scheduler
+### Launch
 
 ```bash
 yarn start
 ```
 
-`start` is the only runtime entrypoint.
+This is the only entrypoint. It opens an interactive menu with three options:
 
-When token/auth state is stale, the app opens an interactive browser flow to refresh token. The script may wait on page interactions, and you can take over manually in the opened browser.
+| Option     | Description                                                                                                     |
+| ---------- | --------------------------------------------------------------------------------------------------------------- |
+| **start**  | Votes immediately, then runs the recurring scheduler                                                            |
+| **config** | Fetches the latest candidates and prompts to select players. Selections are saved to `session/candidates.json`. |
+| **exit**   | Exits the program                                                                                               |
 
-### Handling token expiration
+### Voting schedule
 
-Wait for the next scheduled vote and complete LINE login in the opened browser window.
+After the immediate startup vote, the scheduler picks the next upcoming hour from `[01, 07, 13, 19]` and fires at a random minute and second within that hour. If no upcoming hour exists in the current day, it schedules for 01:xx the next morning.
+
+### Token refresh
+
+When the LINE access token is missing or expired, the app automatically opens a non-headless Chromium window and navigates to the vote page. If the saved browser session is still valid, the token is captured automatically. Otherwise, complete the LINE login manually in the opened browser window — the script will resume once the token is intercepted.
+
+---
+
+## Session files
+
+All session files are stored locally only and never leave your machine.
+
+| File                      | Purpose                                                   |
+| ------------------------- | --------------------------------------------------------- |
+| `session/candidates.json` | Selected candidate `searchId` list                        |
+| `session/auth.json`       | Playwright browser storage state (cookies / localStorage) |
+| `session/token.json`      | LINE access token and capture timestamp                   |
 
 ---
 
