@@ -22,6 +22,11 @@ Votes immediately on startup, then schedules recurring votes at 01, 07, 13, and 
 ### Install dependencies
 
 ```bash
+# npm
+npm install
+npx playwright install chromium
+
+# yarn
 yarn install
 npx playwright install chromium
 ```
@@ -29,6 +34,10 @@ npx playwright install chromium
 ### Launch
 
 ```bash
+# npm
+npm start
+
+# yarn
 yarn start
 ```
 
