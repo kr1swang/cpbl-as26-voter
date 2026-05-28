@@ -3,7 +3,7 @@ import prompts from 'prompts'
 import type { Candidate, PositionGroup } from './types.js'
 import { getCandidates, readCandidates, saveCandidates, validateCandidates } from './utils/candidates.js'
 import { expectedPositions } from './utils/constants.js'
-import { logError, logInfo } from './utils/logger.js'
+import { logInfo } from './utils/logger.js'
 
 function buildGroups(): PositionGroup[] {
   return [
@@ -21,7 +21,7 @@ async function promptSelections(
   groups: PositionGroup[],
   candidates: Candidate[],
   currentCandidates: string[],
-): Promise<string[]> {
+): Promise<string[] | null> {
   const selected = new Array<string>(expectedPositions.length)
 
   for (const { code, label, indices } of groups) {
@@ -46,14 +46,17 @@ async function promptSelections(
       },
       {
         onCancel: () => {
-          logInfo('Cancelled.')
-          process.exit(0)
+          return true
         },
       },
     )
 
-    const picked = value as string[]
-    picked.forEach((searchId, j) => {
+    if (!Array.isArray(value)) {
+      logInfo('Cancelled. Back to main menu.')
+      return null
+    }
+
+    value.forEach((searchId, j) => {
       selected[indices[j]] = searchId
     })
   }
@@ -61,19 +64,19 @@ async function promptSelections(
   return selected
 }
 
-async function config(): Promise<void> {
+export async function configCommand(): Promise<boolean> {
   logInfo('Fetching candidates from CPBL API...')
   const groups = buildGroups()
   const candidates = await getCandidates()
   const currentCandidates = readCandidates()
   const selected = await promptSelections(groups, candidates, currentCandidates)
 
+  if (!selected) {
+    return false
+  }
+
   await validateCandidates(selected)
   saveCandidates(selected)
   logInfo('Saved to session/candidates.json')
+  return true
 }
-
-config().catch((error) => {
-  logError(error instanceof Error ? error.message : String(error))
-  process.exit(1)
-})

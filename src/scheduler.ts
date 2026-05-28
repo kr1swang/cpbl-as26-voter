@@ -33,7 +33,7 @@ async function runVote(): Promise<void> {
   }
 }
 
-async function start(): Promise<void> {
+export async function startCommand(): Promise<void> {
   try {
     logInfo('Try to run vote immediately for the first time')
     await vote()
@@ -44,8 +44,3 @@ async function start(): Promise<void> {
   logInfo('Scheduler is starting...')
   await runVote()
 }
-
-start().catch((error) => {
-  logError(error instanceof Error ? error.message : String(error))
-  process.exit(1)
-})

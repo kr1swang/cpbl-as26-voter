@@ -4,9 +4,7 @@
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "config": "tsx src/config.ts",
-    "dev": "tsx src/scheduler.ts",
-    "start": "tsx src/scheduler.ts"
+    "start": "tsx src/main.ts"
   },
   "dependencies": {
     "axios": "^1.16.1",
