@@ -10,6 +10,23 @@ import { logInfo } from './logger.js'
 const tokenPath = resolve('session/token.json')
 const authPath = resolve('session/auth.json')
 
+async function clickIfVisible(
+  page: import('playwright').Page,
+  selector: string,
+  message: string,
+  timeout = 3000,
+): Promise<boolean> {
+  try {
+    const locator = page.locator(selector).first()
+    await locator.waitFor({ state: 'visible', timeout })
+    await locator.click({ timeout })
+    logInfo(message)
+    return true
+  } catch {
+    return false
+  }
+}
+
 export function saveToken(token: string): void {
   mkdirSync(dirname(tokenPath), { recursive: true })
 
@@ -72,11 +89,18 @@ export async function refreshToken(): Promise<string> {
     logInfo('Waiting for token... (log in to LINE if prompted)')
 
     if (!interceptedToken) {
-      await page.locator('span.btn.vote').first().click({ timeout: 0 })
-      logInfo('Clicked vote button')
+      await clickIfVisible(page, 'span.btn.vote', 'Clicked vote button', 5000)
+      await clickIfVisible(page, 'div.login-button', 'Clicked login button', 5000)
 
-      await page.locator('div.login-button').first().click({ timeout: 0 })
-      logInfo('Clicked login button')
+      while (!interceptedToken) {
+        const clickedVote = await clickIfVisible(page, 'span.btn.vote', 'Clicked vote button after login', 1000)
+        if (clickedVote) {
+          await Promise.race([tokenPromise.then(() => undefined), page.waitForTimeout(1500)])
+          continue
+        }
+
+        await page.waitForTimeout(1000)
+      }
     } else {
       logInfo('Token already intercepted; skipping interaction')
     }
