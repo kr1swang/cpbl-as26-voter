@@ -1,4 +1,4 @@
-import { addMinutes, addSeconds, formatDuration, intervalToDuration, isBefore, isValid, parseISO } from 'date-fns'
+import { formatDuration, intervalToDuration } from 'date-fns'
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { chromium } from 'playwright'
@@ -10,14 +10,13 @@ import { logInfo } from './logger.js'
 const tokenPath = resolve('session/token.json')
 const authPath = resolve('session/auth.json')
 
-export function saveToken(token: string, expiresIn: number): void {
+export function saveToken(token: string): void {
   mkdirSync(dirname(tokenPath), { recursive: true })
 
   const now = new Date()
   const state: TokenState = {
     token,
     updatedAt: now.toISOString(),
-    expiresAt: addSeconds(now, expiresIn).toISOString(),
   }
 
   writeFileSync(tokenPath, JSON.stringify(state, null, 2))
@@ -28,14 +27,21 @@ export function readToken(): TokenState {
   return JSON.parse(raw) as TokenState
 }
 
-export function isTokenStale(): boolean {
+export async function isTokenStale(): Promise<boolean> {
   try {
     const raw = readFileSync(tokenPath, 'utf-8')
-    const state: TokenState = JSON.parse(raw)
-    if (!state.expiresAt) throw new Error('expiresAt missing')
-    const expiresAt = parseISO(state.expiresAt)
-    if (!isValid(expiresAt)) throw new Error('Invalid expiresAt')
-    return isBefore(expiresAt, addMinutes(new Date(), 5))
+    const state = JSON.parse(raw) as TokenState
+    if (!state.token) throw new Error('token missing')
+
+    const { data } = await axios.get<VerifyResponse>(
+      `https://api.line.me/oauth2/v2.1/verify?access_token=${encodeURIComponent(state.token)}`,
+      { headers: { accept: 'application/json' } },
+    )
+
+    const duration = intervalToDuration({ start: 0, end: data.expires_in * 1000 })
+    logInfo(`Token remains ${formatDuration(duration, { format: ['hours', 'minutes'] })}`)
+
+    return false
   } catch {
     return true
   }
@@ -78,15 +84,7 @@ export async function refreshToken(): Promise<string> {
     const token = await tokenPromise
     logInfo('Token captured!')
 
-    const { data } = await axios.get<VerifyResponse>(
-      `https://api.line.me/oauth2/v2.1/verify?access_token=${encodeURIComponent(token)}`,
-      { headers: { accept: 'application/json' } },
-    )
-
-    const duration = intervalToDuration({ start: 0, end: data.expires_in * 1000 })
-    logInfo(`Token remains ${formatDuration(duration, { format: ['hours', 'minutes'] })}`)
-
-    saveToken(token, data.expires_in)
+    saveToken(token)
     await context.storageState({ path: authPath })
 
     logInfo('refresh token succeeded')
@@ -97,7 +95,8 @@ export async function refreshToken(): Promise<string> {
 }
 
 export async function getToken(): Promise<string> {
-  if (isTokenStale()) await refreshToken()
+  const isStale = await isTokenStale()
+  if (isStale) await refreshToken()
   const state = readToken()
   return state.token
 }

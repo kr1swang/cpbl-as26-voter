@@ -8,10 +8,10 @@ import { getToken } from './utils/token.js'
 export async function vote(): Promise<void> {
   logInfo('Vote is running')
 
+  const accessToken = await getToken()
+
   const candidates = readCandidates()
   await validateCandidates(candidates)
-
-  const accessToken = await getToken()
 
   const { data } = await axios.post<SubmitResponse>(
     'https://cpbl-server.line-apps.com/api/candidates/submit/pc',

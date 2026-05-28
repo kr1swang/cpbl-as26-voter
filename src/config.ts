@@ -3,7 +3,7 @@ import prompts from 'prompts'
 import type { Candidate, PositionGroup } from './types.js'
 import { getCandidates, readCandidates, saveCandidates, validateCandidates } from './utils/candidates.js'
 import { expectedPositions } from './utils/constants.js'
-import { logInfo } from './utils/logger.js'
+import { logError, logInfo } from './utils/logger.js'
 
 function buildGroups(): PositionGroup[] {
   return [
@@ -64,19 +64,20 @@ async function promptSelections(
   return selected
 }
 
-export async function configCommand(): Promise<boolean> {
-  logInfo('Fetching candidates from CPBL API...')
-  const groups = buildGroups()
-  const candidates = await getCandidates()
-  const currentCandidates = readCandidates()
-  const selected = await promptSelections(groups, candidates, currentCandidates)
+export async function configCommand(): Promise<void> {
+  try {
+    logInfo('Fetching candidates list...')
 
-  if (!selected) {
-    return false
+    const groups = buildGroups()
+    const candidates = await getCandidates()
+    const currentCandidates = readCandidates()
+    const selected = await promptSelections(groups, candidates, currentCandidates)
+    if (!selected) throw new Error('No candidates selected')
+
+    await validateCandidates(selected)
+    saveCandidates(selected)
+    logInfo('Saved to session/candidates.json')
+  } catch (error) {
+    logError(`Config failed: ${error instanceof Error ? error.message : String(error)}`)
   }
-
-  await validateCandidates(selected)
-  saveCandidates(selected)
-  logInfo('Saved to session/candidates.json')
-  return true
 }

@@ -1,3 +1,9 @@
+export enum MenuAction {
+  Start = 'start',
+  Config = 'config',
+  Exit = 'exit',
+}
+
 export type VerifyResponse = {
   client_id: string
   expires_in: number
@@ -43,5 +49,4 @@ export type PositionGroup = Item['position'] & {
 export type TokenState = {
   token: string
   updatedAt: string
-  expiresAt: string
 }

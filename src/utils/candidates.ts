@@ -18,7 +18,7 @@ export function readCandidates(): string[] {
   const raw = readFileSync(candidatesPath, 'utf-8')
   const candidates: string[] = JSON.parse(raw)
   if (!Array.isArray(candidates) || candidates.length !== expectedPositions.length)
-    throw new Error('session/candidates.json is invalid — run: yarn config')
+    throw new Error('session/candidates.json is invalid')
   return candidates
 }
 
@@ -78,19 +78,17 @@ export async function validateCandidates(candidates: string[]): Promise<void> {
   })
 
   const grouped = new Map<string, Candidate[]>()
-  for (const c of data) {
-    const group = grouped.get(c.position)
-    if (group) group.push(c)
-    else grouped.set(c.position, [c])
+  for (const candidates of data) {
+    const group = grouped.get(candidates.position)
+    if (group) group.push(candidates)
+    else grouped.set(candidates.position, [candidates])
   }
 
   const rankMap = new Map(
     [...grouped.values()].flatMap((group) =>
-      group.sort((a, b) => b.votes - a.votes).map((c, i) => [c.searchId, i + 1] as const),
+      group.sort((a, b) => b.votes - a.votes).map((candidates, index) => [candidates.searchId, index + 1] as const),
     ),
   )
-
-  const getRanking = (row: Item): string => `#${rankMap.get(row.searchId) ?? '?'}`
 
   console.table(
     list.map((row) => ({
@@ -98,7 +96,7 @@ export async function validateCandidates(candidates: string[]): Promise<void> {
       isValid: row.isValid ? '✓' : '✗',
       position: `${row.position.label}(${row.position.code})`,
       no: isNaN(row.no) ? '-' : `#${row.no}`,
-      ranking: getRanking(row),
+      ranking: `#${rankMap.get(row.searchId) ?? '?'}`,
       votes: (isNaN(row.votes) ? '-' : `${row.votes}`).padStart(8, ' '),
       message: row.message ?? '-',
     })),
