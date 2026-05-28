@@ -8,12 +8,9 @@ Votes immediately on startup, then schedules recurring votes at 01, 07, 13, and 
 
 ## Stack
 
-- **Playwright** — opens a browser to complete LINE login and intercept the access token
+- **playwright** — opens a browser to complete LINE login and intercept the access token
 - **axios** — calls the voting API
 - **date-fns** — schedule time calculation
-- **session/auth.json** — persists browser session (cookies / localStorage)
-- **session/token.json** — stores the runtime access token
-- **session/candidates.json** — stores the selected candidates for each position
 
 ---
 
