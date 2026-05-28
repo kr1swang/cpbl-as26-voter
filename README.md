@@ -47,7 +47,7 @@ npm start
 yarn start
 ```
 
-This is the only entrypoint. It opens an interactive menu with three options:
+This is the only entrypoint. It opens an interactive menu with two options:
 
 | Option     | Description                                                                                                     |
 | ---------- | --------------------------------------------------------------------------------------------------------------- |
