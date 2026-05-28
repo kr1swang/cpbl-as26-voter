@@ -15,7 +15,6 @@ async function main(): Promise<void> {
         choices: [
           { title: 'start', value: MenuAction.Start },
           { title: 'config', value: MenuAction.Config },
-          { title: 'exit', value: MenuAction.Exit },
         ],
         initial: 0,
       },
@@ -33,7 +32,6 @@ async function main(): Promise<void> {
         await configCommand()
         break
       }
-      case MenuAction.Exit:
       default: {
         logInfo('Exit.')
         return

@@ -1,7 +1,6 @@
 export enum MenuAction {
   Start = 'start',
   Config = 'config',
-  Exit = 'exit',
 }
 
 export type VerifyResponse = {

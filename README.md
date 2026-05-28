@@ -38,7 +38,6 @@ This is the only entrypoint. It opens an interactive menu with three options:
 | ---------- | --------------------------------------------------------------------------------------------------------------- |
 | **start**  | Votes immediately, then runs the recurring scheduler                                                            |
 | **config** | Fetches the latest candidates and prompts to select players. Selections are saved to `session/candidates.json`. |
-| **exit**   | Exits the program                                                                                               |
 
 ### Voting schedule
 
@@ -54,11 +53,11 @@ When the LINE access token is missing or expired, the app automatically opens a 
 
 All session files are stored locally only and never leave your machine.
 
-| File                      | Purpose                                                   |
-| ------------------------- | --------------------------------------------------------- |
-| `session/candidates.json` | Selected candidate `searchId` list                        |
-| `session/auth.json`       | Playwright browser storage state (cookies / localStorage) |
-| `session/token.json`      | LINE access token and capture timestamp                   |
+| File                      | Purpose                                                               |
+| ------------------------- | --------------------------------------------------------------------- |
+| `session/candidates.json` | Selected candidate `searchId` list, run config script to overwrite it |
+| `session/auth.json`       | Playwright browser storage state (cookies / localStorage)             |
+| `session/token.json`      | LINE access token and capture timestamp                               |
 
 ---
 
