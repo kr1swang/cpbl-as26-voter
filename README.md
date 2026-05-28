@@ -78,6 +78,6 @@ All session files are stored locally only and never leave your machine.
 
 ## Disclaimer
 
-This project is intended for personal learning and technical research purposes only. The author takes no responsibility for any account suspension, service interruption, or other damages resulting from the use of this software. Use at your own risk and ensure compliance with LINE's and CPBL's terms of service.
+This project is intended for personal learning and technical research purposes only. The author takes no responsibility for any account suspension, service interruption, or other damages resulting from the use of this software. Use at your own risk and ensure compliance with CPBL's terms of service.
 
-If you are an official representative of CPBL or LINE and believe this project infringes upon your rights, please contact the author via email. The project will be taken down promptly upon a valid request.
+If you are an official representative of CPBL and believe this project infringes upon your rights, please contact the author via email. The project will be taken down promptly upon a valid request.
