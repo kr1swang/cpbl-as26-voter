@@ -1,7 +1,7 @@
 import prompts from 'prompts'
 
 import type { Candidate, PositionGroup } from './types.js'
-import { getCandidates, readCandidates, saveCandidates, validateCandidates } from './utils/candidates.js'
+import { getCandidates, saveCandidates, validateCandidates } from './utils/candidates.js'
 import { expectedPositions } from './utils/constants.js'
 import { logError, logInfo } from './utils/logger.js'
 
@@ -17,11 +17,7 @@ function buildGroups(): PositionGroup[] {
   ]
 }
 
-async function promptSelections(
-  groups: PositionGroup[],
-  candidates: Candidate[],
-  currentCandidates: string[],
-): Promise<string[] | null> {
+async function promptSelections(groups: PositionGroup[], candidates: Candidate[]): Promise<string[] | null> {
   const selected = new Array<string>(expectedPositions.length)
 
   for (const { code, label, indices } of groups) {
@@ -38,7 +34,6 @@ async function promptSelections(
           title: c.name,
           description: `${c.team.toUpperCase()} #${c.no}`,
           value: c.searchId,
-          selected: indices.some((i) => currentCandidates[i] === c.searchId),
         })),
         min: count,
         max: count,
@@ -70,8 +65,7 @@ export async function configCommand(): Promise<void> {
 
     const groups = buildGroups()
     const candidates = await getCandidates()
-    const currentCandidates = readCandidates()
-    const selected = await promptSelections(groups, candidates, currentCandidates)
+    const selected = await promptSelections(groups, candidates)
     if (!selected) throw new Error('No candidates selected')
 
     await validateCandidates(selected)
