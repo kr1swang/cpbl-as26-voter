@@ -26,17 +26,7 @@ yarn install
 npx playwright install chromium
 ```
 
-### 1. Login (obtain token)
-
-```bash
-yarn login
-```
-
-A browser window will open. If the session has expired, log in to LINE manually.
-
-Once the page loads, the token is intercepted and saved to `session/` automatically, then the browser closes.
-
-### 2. Configure candidates
+### 1. Configure candidates
 
 ```bash
 yarn config
@@ -46,15 +36,19 @@ Fetches the latest candidates from the CPBL API and prompts you to interactively
 
 Default settings are the developer's selections for each position. You can modify the candidates at any time by running the command again.
 
-### 3. Start the scheduler
+### 2. Start the scheduler
 
 ```bash
 yarn start
 ```
 
+`start` is the only runtime entrypoint.
+
+When token/auth state is stale, the app first attempts silent refresh. If that fails, it automatically opens an interactive browser flow to complete authentication and then continues.
+
 ### Handling token expiration
 
-If you see `TOKEN_EXPIRED` in the logs, simply run `yarn login` again.
+If `TOKEN_EXPIRED` appears in the logs, automatic refresh and interactive authentication both failed. Re-run `yarn start` and complete LINE login when the browser opens.
 
 ---
 

@@ -1,9 +1,9 @@
 import axios from 'axios'
 
 import type { SubmitResponse } from './types.js'
-import { ensureValidToken } from './utils/auth.js'
 import { readCandidates, validateCandidates } from './utils/candidates.js'
 import { logInfo } from './utils/logger.js'
+import { getToken } from './utils/token.js'
 
 export async function vote(): Promise<void> {
   logInfo('Vote is running')
@@ -11,31 +11,23 @@ export async function vote(): Promise<void> {
   const candidates = readCandidates()
   await validateCandidates(candidates)
 
-  const accessToken = await ensureValidToken()
+  const accessToken = await getToken()
 
-  try {
-    const { data } = await axios.post<SubmitResponse>(
-      'https://cpbl-server.line-apps.com/api/candidates/submit/pc',
-      candidates,
-      {
-        headers: {
-          accept: 'application/json, text/plain, */*',
-          'content-type': 'application/json',
-          origin: 'https://linetoday-cpbl.landpress.line.me',
-          referer: 'https://linetoday-cpbl.landpress.line.me/',
-          'x-liff-client': 'false',
-          'x-line-accesstoken': accessToken,
-        },
+  const { data } = await axios.post<SubmitResponse>(
+    'https://cpbl-server.line-apps.com/api/candidates/submit/pc',
+    candidates,
+    {
+      headers: {
+        accept: 'application/json, text/plain, */*',
+        'content-type': 'application/json',
+        origin: 'https://linetoday-cpbl.landpress.line.me',
+        referer: 'https://linetoday-cpbl.landpress.line.me/',
+        'x-liff-client': 'false',
+        'x-line-accesstoken': accessToken,
       },
-    )
-    if (data.code !== 200) throw new Error(data.message || 'Failed to submit vote')
+    },
+  )
+  if (data.code !== 200) throw new Error(data.message || 'Failed to submit vote')
 
-    logInfo(`Vote completed, ${data.message}`)
-  } catch (error) {
-    if (axios.isAxiosError(error) && [401, 403].includes(error.response?.status ?? 0)) {
-      throw new Error('Token rejected by API')
-    } else {
-      throw error
-    }
-  }
+  logInfo(`Vote completed, ${data.message}`)
 }

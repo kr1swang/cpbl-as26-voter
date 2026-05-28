@@ -22,15 +22,6 @@ export function readCandidates(): string[] {
   return candidates
 }
 
-export async function getCandidates(): Promise<Candidate[]> {
-  const { data } = await axios.get<CandidatesResponse>('https://cpbl-server.line-apps.com/api/candidates', {
-    headers: { accept: 'application/json' },
-  })
-  if (data.code !== 200) throw new Error(data.message || 'Failed to fetch candidates')
-
-  return data.result
-}
-
 export async function validateCandidates(candidates: string[]): Promise<void> {
   logInfo('Validating candidates')
 
@@ -116,4 +107,13 @@ export async function validateCandidates(candidates: string[]): Promise<void> {
 
   const rows = list.filter((row) => !row.isValid)
   if (rows.length > 0) throw new Error(`There are ${rows.length} invalid candidates`)
+}
+
+export async function getCandidates(): Promise<Candidate[]> {
+  const { data } = await axios.get<CandidatesResponse>('https://cpbl-server.line-apps.com/api/candidates', {
+    headers: { accept: 'application/json' },
+  })
+  if (data.code !== 200) throw new Error(data.message || 'Failed to fetch candidates')
+
+  return data.result
 }

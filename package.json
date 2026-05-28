@@ -5,7 +5,6 @@
   "type": "module",
   "scripts": {
     "config": "tsx src/config.ts",
-    "login": "tsx src/login.ts",
     "dev": "tsx src/scheduler.ts",
     "start": "tsx src/scheduler.ts"
   },

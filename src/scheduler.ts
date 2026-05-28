@@ -34,8 +34,8 @@ async function runVote(): Promise<void> {
 }
 
 async function start(): Promise<void> {
-  logInfo('Try to run vote immediately for the first time')
   try {
+    logInfo('Try to run vote immediately for the first time')
     await vote()
   } catch (error) {
     logError(`Initial vote failed: ${error instanceof Error ? error.message : String(error)}`)
