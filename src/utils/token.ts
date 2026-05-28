@@ -49,7 +49,7 @@ export async function refreshToken(): Promise<string> {
   const page = await context.newPage()
 
   let interceptedToken: string | null = null
-  const tokenPromise = new Promise<string>((resolve, reject) => {
+  const tokenPromise = new Promise<string>((resolve) => {
     page.on('request', (request) => {
       if (request.url().includes('api/candidates') && !request.url().includes('submit')) {
         const token = request.headers()['x-line-accesstoken']
@@ -66,7 +66,7 @@ export async function refreshToken(): Promise<string> {
 
   if (!interceptedToken) {
     await page.locator('span.btn.vote').first().click({ timeout: 0 })
-    logInfo('Clicked first vote button to trigger token request')
+    logInfo('Clicked vote button')
 
     await page.locator('div.login-button').first().click({ timeout: 0 })
     logInfo('Clicked login button')
