@@ -115,3 +115,36 @@ export async function getCandidates(): Promise<Candidate[]> {
 
   return data.result
 }
+
+export async function showCurrentPopularity(): Promise<void> {
+  logInfo('Current popularity ranking')
+
+  const candidates = await getCandidates()
+  const list = candidates
+    .filter(({ position }) => position !== 'HR')
+    .sort((a, b) => b.votes - a.votes)
+    .slice(0, 5)
+    .map((candidate, index, array) => {
+      const expected = expectedPositions.find((p) => p.code === candidate.position)
+      const diff = index === 0 ? NaN : candidate.votes - array[index - 1].votes
+      return {
+        ...candidate,
+        isValid: true,
+        position: expected!,
+        message: (isNaN(diff) ? '-' : `${diff}`).padStart(8, ' '),
+      }
+    })
+
+  console.table(
+    list.map((row, index) => ({
+      ...row,
+      isValid: row.isValid ? '✓' : '✗',
+      position: `${row.position.label}(${row.position.code})`,
+      no: isNaN(row.no) ? '-' : `#${row.no}`,
+      ranking: `#${index + 1}`,
+      votes: (isNaN(row.votes) ? '-' : `${row.votes}`).padStart(8, ' '),
+      message: row.message ?? '-',
+    })),
+    ['isValid', 'position', 'name', 'team', 'no', 'ranking', 'votes', 'message'],
+  )
+}

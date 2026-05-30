@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 import type { SubmitResponse } from './types.js'
-import { readCandidates, validateCandidates } from './utils/candidates.js'
+import { readCandidates, showCurrentPopularity, validateCandidates } from './utils/candidates.js'
 import { logInfo } from './utils/logger.js'
 import { getToken } from './utils/token.js'
 
@@ -12,6 +12,7 @@ export async function vote(): Promise<void> {
 
   const candidates = readCandidates()
   await validateCandidates(candidates)
+  await showCurrentPopularity()
 
   const { data } = await axios.post<SubmitResponse>(
     'https://cpbl-server.line-apps.com/api/candidates/submit/pc',
