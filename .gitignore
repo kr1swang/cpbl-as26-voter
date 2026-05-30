@@ -1,6 +1,4 @@
 node_modules/
 dist/
-session/auth.json
-session/token.json
-.env
-.env.*
+session/*
+!session/candidates.json
