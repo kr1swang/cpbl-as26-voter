@@ -140,6 +140,7 @@ export async function showCurrentPopularity(): Promise<void> {
       ...row,
       isValid: row.isValid ? '✓' : '✗',
       position: `${row.position.label}(${row.position.code})`,
+      team: row.team.toUpperCase(),
       no: isNaN(row.no) ? '-' : `#${row.no}`,
       ranking: `#${index + 1}`,
       votes: (isNaN(row.votes) ? '-' : `${row.votes}`).padStart(8, ' '),
