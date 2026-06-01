@@ -124,13 +124,17 @@ export async function showCurrentPopularity(): Promise<void> {
     .filter(({ position }) => position !== 'HR')
     .sort((a, b) => b.votes - a.votes)
     .slice(0, 5)
-    .map((candidate, index, array) => {
-      const expected = expectedPositions.find((p) => p.code === candidate.position)
-      const diff = index === 0 ? NaN : candidate.votes - array[index - 1].votes
+    .map(({ searchId, position, name, team, no, votes }, index, array) => {
+      const expected = expectedPositions.find((p) => p.code === position)
+      const diff = index === 0 ? NaN : votes - array[index - 1].votes
       return {
-        ...candidate,
+        searchId,
         isValid: true,
         position: expected!,
+        name,
+        team: team.toUpperCase(),
+        no,
+        votes,
         message: (isNaN(diff) ? '-' : `${diff}`).padStart(8, ' '),
       }
     })
@@ -140,7 +144,6 @@ export async function showCurrentPopularity(): Promise<void> {
       ...row,
       isValid: row.isValid ? '✓' : '✗',
       position: `${row.position.label}(${row.position.code})`,
-      team: row.team.toUpperCase(),
       no: isNaN(row.no) ? '-' : `#${row.no}`,
       ranking: `#${index + 1}`,
       votes: (isNaN(row.votes) ? '-' : `${row.votes}`).padStart(8, ' '),
