@@ -55,6 +55,10 @@ This is the only entrypoint. It opens an interactive menu with two options:
 
 After the immediate startup vote, the scheduler picks the next upcoming hour from `[01, 07, 13, 19]` and fires at a random minute and second within that hour. If no upcoming hour exists in the current day, it schedules for 01:xx the next morning.
 
+### Popularity snapshot
+
+Before each vote is submitted, the top 5 candidates by current vote count (excluding the Home Run category) are printed to the console as a table, along with the vote difference from the leader.
+
 ### Token refresh
 
 When the LINE access token is missing or expired, the app automatically opens a non-headless Chromium window and navigates to the vote page. If the saved browser session is still valid, the token is captured automatically. Otherwise, complete the LINE login manually in the opened browser window — the script will resume once the token is intercepted.
